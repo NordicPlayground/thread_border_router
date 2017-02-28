@@ -1,0 +1,182 @@
+#!/bin/sh
+#
+#  Copyright (c) 2017, Nordic Semiconductor
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+# @note This file configures Border Router for Thread Network.
+#
+
+###############################################################################
+# Read configuration file.
+###############################################################################
+
+source /etc/config/thread_border_router.conf
+
+###############################################################################
+# Remove old instance of Tayga NAT64.
+###############################################################################
+
+clean_nat64() {
+	rm -r /var/db/tayga
+	mkdir -p /var/db/tayga/
+	touch /var/db/tayga/dynamic.map
+	ip link del dev tayga-nat64
+}
+
+###############################################################################
+# Configure Tayga NAT64.
+###############################################################################
+
+init_nat64() {
+	clean_nat64
+	prefix_nat96=$prefix_nat64"/96"
+
+	sed -i "/^prefix/s,.*,prefix $prefix_nat96," /etc/tayga.conf
+	sed -i "/dns64/s,.*,        dns64 $prefix_nat96 {," /etc/bind/named.conf
+
+	tayga --mktun
+	ip link set tayga-nat64 up
+	sleep 3
+
+	# Assigns an ipv4 addr to the TAYGA interface, used for returning icmp errors
+	ip addr add 192.168.64.1 dev tayga-nat64
+
+	# Assigns an ipv6 addr to the TAYGA interface, used for returning icmp errors
+	ip addr add $prefix_nat48"1" dev tayga-nat64
+	ip addr add $prefix_nat48"/64" dev tayga-nat64
+
+	ip route add 192.168.64.0/24 dev tayga-nat64
+	ip route add $prefix_nat96 dev tayga-nat64
+}
+
+
+###############################################################################
+# Manage IPv6 global addresses.
+###############################################################################
+
+assign_global_ipv6_addrs() {
+    list_wan_addresses=`ip addr show dev eth0 | sed -e"s/^.*inet6 \([^ ]*\).*$/\1/;t;d"`
+
+    for addr in $list_wan_addresses
+    do
+        prefix_len=`echo $addr | cut -d"/" -f2`
+
+        if [ $prefix_len -lt 63 ]
+        then
+            global_addr=`echo $addr | cut -d"/" -f1`
+            prefix=`/usr/bin/python /usr/local/sbin/create_subnet64.py $global_addr`
+            
+            wpanctl config-gateway $prefix -d
+        fi
+    done
+}
+
+###############################################################################
+# Manage NAT64 addresses.
+###############################################################################
+
+assign_nat64_addrs() {
+    wpanctl config-gateway $prefix_ula -d
+    sleep 2
+    wpanctl add-route $prefix_nat64
+}
+
+###############################################################################
+# Prepare network environment.
+###############################################################################
+
+prepare_network() {
+	echo 1 > /proc/sys/net/ipv4/conf/all/forwarding
+	echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+	echo 0 > /proc/sys/net/ipv6/conf/eth0/forwarding
+
+	iptables -F
+	iptables -t nat -F
+	iptables -t nat -I POSTROUTING 1 -o eth0 -j MASQUERADE
+
+	tayga -d &
+	sleep 3
+}
+
+###############################################################################
+# Run Border Router Service.
+###############################################################################
+
+run() {
+	stty -F /dev/ttyACM0 $ncp_baudrate
+	sleep 1
+
+	killall wpantund 2>/dev/null
+	sleep 2
+	
+	wpantund -b $ncp_baudrate -d&
+	sleep 6
+
+	wpanctl reset
+	sleep 3
+
+	wpanctl set Network:Key --data $thread_network_key
+	wpanctl set NCP:Channel $thread_channel
+	wpanctl setprop Network:PANID $thread_panid
+	wpanctl attach
+	sleep 5
+	
+	timeout=10
+	
+	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $timeout -gt 0 ]
+	do
+		echo "In while.."
+		timeout=$((timeout-1))
+		sleep 2
+	done
+
+	if [ "$nfc_commissioner_enable" = true ]; then
+		sleep 15
+		wpanctl commissioner --start
+		nfccommissiond
+	fi
+}
+
+###############################################################################
+# Main  script
+###############################################################################
+
+init_nat64
+prepare_network
+
+while true
+do
+	run
+
+	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` == "associated" ]
+	do
+		assign_nat64_addrs
+		sleep 2
+		assign_global_ipv6_addrs
+		sleep 20
+	done
+done
+

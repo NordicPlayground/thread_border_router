@@ -55,4 +55,7 @@ sleep 30
 wpanctl config-gateway fdff:cafe:cafe:cafe:: -d
 sleep 30
 wpanctl add-route fd00:0064:0123:4567::
+sleep 15
+wpanctl commissioner --start
+sleep 5
 /bin/sh /root/prefix_border_router.sh &

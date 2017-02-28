@@ -1,0 +1,15 @@
+#!/bin/sh
+
+PRODID="1366/1015/100"
+
+if [ "${PRODUCT}" = "${PRODID}" ]; then
+    if [ "${ACTION}" = "add" ]; then
+	    logger -t DEBUG "NCP Connected, starting thread_border_router"
+        /etc/init.d/thread_border_router start
+    fi
+
+    if [ "${ACTION}" = "remove" ]; then
+		logger -t DEBUG "NCP Disconnected, stopping thread_border_router"
+		/etc/init.d/thread_border_router stop
+    fi
+fi

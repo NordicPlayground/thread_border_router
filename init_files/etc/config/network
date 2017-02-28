@@ -1,0 +1,27 @@
+
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option ula_prefix 'fdb3:867c:4acf::/64'
+
+config interface 'lan'
+	option proto 'dhcp'
+	option hostname 'Thread Border Router'
+	option _orig_ifname 'eth0 radio0.network1'
+	option _orig_bridge 'true'
+	option ifname 'eth0'
+
+config interface 'wan6'
+	option proto 'dhcpv6'
+	option ifname 'eth0'
+	option reqaddress 'force'
+	option reqprefix '62'
+	option ip6assign '62'
+
+config interface 'wpan0'
+	option proto 'static'
+
