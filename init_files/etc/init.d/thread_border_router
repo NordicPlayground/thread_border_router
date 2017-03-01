@@ -39,5 +39,7 @@ stop() {
 		killall thread_border_router
         killall wpantund
 		killall tayga
+		nfccommissiond stop
+		killall wpanctl
 }
 

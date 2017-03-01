@@ -89,6 +89,7 @@ assign_global_ipv6_addrs() {
             global_addr=`echo $addr | cut -d"/" -f1`
             prefix=`/usr/bin/python /usr/local/sbin/create_subnet64.py $global_addr`
             
+            sleep 1
             wpanctl config-gateway $prefix -d
         fi
     done
@@ -99,6 +100,7 @@ assign_global_ipv6_addrs() {
 ###############################################################################
 
 assign_nat64_addrs() {
+    sleep 1
     wpanctl config-gateway $prefix_ula -d
     sleep 2
     wpanctl add-route $prefix_nat64
@@ -130,10 +132,11 @@ run() {
 	sleep 1
 
 	killall wpantund 2>/dev/null
+  nfccommissiond stop
 	sleep 2
 	
 	wpantund -b $ncp_baudrate -d&
-	sleep 6
+	sleep 2
 
 	wpanctl reset
 	sleep 3
@@ -146,18 +149,11 @@ run() {
 	
 	timeout=10
 	
-	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $timeout -gt 0 ]
+	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $timeout -gt 0 ] && [ $? -eq 0 ]
 	do
-		echo "In while.."
 		timeout=$((timeout-1))
 		sleep 2
-	done
-
-	if [ "$nfc_commissioner_enable" = true ]; then
-		sleep 15
-		wpanctl commissioner --start
-		nfccommissiond
-	fi
+  done
 }
 
 ###############################################################################
@@ -169,14 +165,25 @@ prepare_network
 
 while true
 do
+  commissioner_started=0
 	run
 
-	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` == "associated" ]
+	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` = "associated" ] && [ $? -eq 0 ]
 	do
 		assign_nat64_addrs
 		sleep 2
 		assign_global_ipv6_addrs
-		sleep 20
+    
+    if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
+    then
+        echo "commissioner_started"
+        sleep 3
+        wpanctl commissioner --start
+        sleep 1
+        nfccommissiond
+        commissioner_started=1
+    fi
+  
+    sleep 15
 	done
 done
-
