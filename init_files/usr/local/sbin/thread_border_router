@@ -132,7 +132,7 @@ run() {
 	sleep 1
 
 	killall wpantund 2>/dev/null
-  nfccommissiond stop
+	nfccommissiond stop
 	sleep 2
 	
 	wpantund -b $ncp_baudrate -d&
@@ -149,11 +149,11 @@ run() {
 	
 	timeout=10
 	
-	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $timeout -gt 0 ] && [ $? -eq 0 ]
+	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $? -eq 0 ] && [ $timeout -gt 0 ]
 	do
 		timeout=$((timeout-1))
 		sleep 2
-  done
+	done
 }
 
 ###############################################################################
@@ -165,7 +165,7 @@ prepare_network
 
 while true
 do
-  commissioner_started=0
+	commissioner_started=0
 	run
 
 	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` = "associated" ] && [ $? -eq 0 ]
@@ -174,16 +174,16 @@ do
 		sleep 2
 		assign_global_ipv6_addrs
     
-    if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
-    then
+	if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
+	then
         echo "commissioner_started"
         sleep 3
         wpanctl commissioner --start
         sleep 1
         nfccommissiond
         commissioner_started=1
-    fi
+	fi
   
-    sleep 15
+	sleep 15
 	done
 done
