@@ -30,16 +30,16 @@
 START=99
 
 start() {
-        echo Thread Border Router START
-        /bin/sh /usr/local/sbin/thread_border_router
+	echo Thread Border Router START
+	/bin/sh /usr/local/sbin/thread_border_router
 }
 
 stop() {
-        echo Thread Border Router STOP
-		killall thread_border_router
-        killall wpantund
-		killall tayga
-		nfccommissiond stop
-		killall wpanctl
+	echo Thread Border Router STOP
+	ps | grep 'thread_border_router' | awk '{print $1}' | xargs -n1 kill -9
+	killall wpantund
+	killall tayga
+	nfccommissiond stop
+	killall wpanctl
 }
 
