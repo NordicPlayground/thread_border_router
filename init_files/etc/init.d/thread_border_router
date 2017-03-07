@@ -40,6 +40,6 @@ stop() {
 	killall tayga
 	nfccommissiond stop
 	killall wpanctl
-	ps | grep 'thread_border_router' | awk '{print $1}' | xargs -n1 kill -9
+	ps | grep 'thread_border_router' | grep -v grep | awk '{print $1}' | xargs -n1 kill -9
 }
 
