@@ -31,7 +31,7 @@ START=99
 
 start() {
 	echo Thread Border Router START
-	/bin/sh /usr/local/sbin/thread_border_router
+	/bin/sh /usr/local/sbin/thread_border_router&
 }
 
 stop() {
