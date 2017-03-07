@@ -33,7 +33,7 @@
 # Read configuration file.
 ###############################################################################
 
-source /etc/config/thread_border_router.conf
+source /etc/config/thread_border_router
 
 ###############################################################################
 # Remove old instance of Tayga NAT64.
