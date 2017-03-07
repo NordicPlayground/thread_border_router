@@ -78,21 +78,18 @@ init_nat64() {
 ###############################################################################
 
 assign_global_ipv6_addrs() {
-    list_wan_addresses=`ip addr show dev eth0 | sed -e"s/^.*inet6 \([^ ]*\).*$/\1/;t;d"`
-
-    for addr in $list_wan_addresses
-    do
-        prefix_len=`echo $addr | cut -d"/" -f2`
-
-        if [ $prefix_len -lt 63 ]
-        then
-            global_addr=`echo $addr | cut -d"/" -f1`
-            prefix=`/usr/bin/python /usr/local/sbin/create_subnet64.py $global_addr`
-            
-            sleep 1
-            wpanctl config-gateway $prefix -d
-        fi
-    done
+	list_wan_addresses=`ip addr show dev eth0 | sed -e"s/^.*inet6 \([^ ]*\).*$/\1/;t;d"`
+	for addr in $list_wan_addresses
+	do
+		prefix_len=`echo $addr | cut -d"/" -f2`
+		if [ $prefix_len -lt 63 ]
+		then
+			global_addr=`echo $addr | cut -d"/" -f1`
+			prefix=`/usr/bin/python /usr/local/sbin/create_subnet64.py $global_addr`
+			sleep 1
+			wpanctl config-gateway $prefix -d
+		fi
+	done
 }
 
 ###############################################################################
@@ -100,10 +97,10 @@ assign_global_ipv6_addrs() {
 ###############################################################################
 
 assign_nat64_addrs() {
-    sleep 1
-    wpanctl config-gateway $prefix_ula -d
-    sleep 2
-    wpanctl add-route $prefix_nat64
+	sleep 1
+	wpanctl config-gateway $prefix_ula -d
+	sleep 2
+	wpanctl add-route $prefix_nat64
 }
 
 ###############################################################################
@@ -176,14 +173,13 @@ do
     
 	if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
 	then
-        echo "commissioner_started"
-        sleep 3
-        wpanctl commissioner --start
-        sleep 1
-        nfccommissiond
-        commissioner_started=1
+		echo "commissioner_started"
+		sleep 3
+		wpanctl commissioner --start
+		sleep 1
+		nfccommissiond
+		commissioner_started=1
 	fi
-  
 	sleep 15
 	done
 done
