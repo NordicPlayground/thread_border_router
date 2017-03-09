@@ -55,7 +55,6 @@ init_nat64() {
 	prefix_nat96=$prefix_nat64"/96"
 
 	sed -i "/^prefix/s,.*,prefix $prefix_nat96," /etc/tayga.conf
-	sed -i "/dns64/s,.*,        dns64 $prefix_nat96 {," /etc/bind/named.conf
 
 	tayga --mktun
 	ip link set tayga-nat64 up
