@@ -1,0 +1,8 @@
+Binary image intended for Border Router is distributed under license 
+inherited from OpenWRT project (OpenWRT_LICENSE.txt) with limitations 
+imposed by license inherited from NXP’s EXPLORE_NFC_WW 
+(NXP_EXPLORE-NFC-WW_LICENSE.pdf). EXPLORE_NFC_WW license applies if 
+a user uses a Border Router feature to natively commission nodes using NFC.
+
+For corresponding source code and build system please refer to:
+https://github.com/NordicSemiconductor/thread_border_router/blob/master/README.md
