@@ -75,7 +75,7 @@ Solution:
 wget https://librecmc.org/librecmc/downloads/sources/v1.3.4/vpnc-0.5.3.r550.tar.gz -P openwrt/dl/
 
 
-###2. Build failed - please re-run with -j1 to see the real error message.
+###2. Build failed - please re-run with -j1 to see the to see a detailed error message.
 Please rerun the build with -j1 parameter.
 
 execute ./build_slow
