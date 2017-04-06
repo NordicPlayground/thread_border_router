@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Setup default AP network or connect to the previous network as a client
+# Default AP configuration is assumed to be in /etc/config/wireless-ap-only
+#
+source /boot/wifi_config.txt
+ 
+TIMEOUT=30
+SLEEP=3
+TRIES=$((TIMEOUT / SLEEP))
+sta_err=0
+echo $erase_wifi_configuration
+if [ $erase_wifi_configuration -eq 1 ]; then
+  logger -t wifi "Erasing wifi configuration, entering AP only mode"
+  cp /etc/config/wireless_ap_only /etc/config/wireless
+  wifi up
+  #cp /etc/config/wireless_empty /etc/config/wireless
+else
+  sleep 5
+  while [ $(iwinfo | grep -c "ESSID: unknown") -ge 1 ]; do
+    logger -t wifi "Failed to connect to the stored wifi network $sta_err/$TRIES"
+    let sta_err=$sta_err+1
+    sleep $SLEEP
+    if [ $((sta_err * SLEEP)) -ge $TIMEOUT ]; then
+      logger -t wifi "Failed to connect to the stored wifi network, getting back to the fallback AP configuration"
+      cp /etc/config/wireless_ap_only /etc/config/wireless
+      wifi up
+      #cp /etc/config/wireless_empty /etc/config/wireless
+      break
+    fi
+  done
+fi
+#if [ $sta_err -lt $TRIES ]; then
+if [ $(iwinfo | grep -c "ESSID: unknown") -ne 1 ]; then
+  logger -t wifi "WIFI SSID: $(iwinfo | grep ESSID | cut -d \" -f 2)"
+fi

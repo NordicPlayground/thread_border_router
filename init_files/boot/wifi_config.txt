@@ -1,0 +1,9 @@
+#!/bin/sh
+#  erase_wifi_configuration after the reboot
+#  0 - keeps previous wifi configuration, eg tries to connect to the previous network
+#  1 - erases the configuration, Thread Border Router starts wifi radio starts as:
+#  ESSID: Thread Border Router
+#  Password: nordicBR
+#  WPA2-PSK is used
+
+erase_wifi_configuration=0

@@ -1,0 +1,20 @@
+
+config wifi-device 'radio0'
+	option type 'mac80211'
+	option path 'platform/soc/3f300000.mmc/mmc_host/mmc1/mmc1:0001/mmc1:0001:1'
+	option htmode 'HT20'
+	option noscan '1'
+	option hwmode '11g'
+	option txpower '20'
+	option country '00'
+	option channel '6'
+
+config wifi-iface
+	option device 'radio0'
+	option network 'wifi'
+	option mode 'ap'
+	option ssid 'Thread Border Router'
+	option encryption 'psk2'
+	option key 'nordicBR'
+	option wps_pushbutton '0'
+
