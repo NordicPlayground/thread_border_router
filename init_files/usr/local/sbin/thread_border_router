@@ -66,11 +66,30 @@ init_nat64() {
 	# Assigns an ipv6 addr to the TAYGA interface, used for returning icmp errors
 	ip addr add $prefix_nat48"1" dev tayga-nat64
 	ip addr add $prefix_nat48"/64" dev tayga-nat64
+	ip addr add $prefix_nat64"1" dev tayga-nat64
 
 	ip route add 192.168.64.0/24 dev tayga-nat64
 	ip route add $prefix_nat96 dev tayga-nat64
 }
 
+###############################################################################
+# Init DNS64 server.
+###############################################################################
+
+init_dns64() {
+	dns64_server=$prefix_nat64"1/128"
+
+	sed -i "/dns64/s,.*,	dns64 $prefix_nat96 {," /etc/bind/named.conf
+	sed -i "/allow-query-on/s,.*,	allow-query-on { $dns64_server; };," /etc/bind/named.conf
+
+	/etc/init.d/named stop
+
+	echo "domain example.local" > /etc/resolv.conf
+	echo "nameserver 127.0.0.1" >> /etc/resolv.conf
+
+	/etc/init.d/named reload
+	/etc/init.d/named start
+}
 
 ###############################################################################
 # Manage IPv6 global addresses.
@@ -157,6 +176,7 @@ run() {
 ###############################################################################
 
 init_nat64
+init_dns64
 prepare_network
 
 while true
