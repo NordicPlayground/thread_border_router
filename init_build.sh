@@ -7,7 +7,6 @@ cp ../init_files/feeds.conf ./feeds.conf
 cp -r ../init_files/etc ./files
 cp -r ../init_files/root ./files
 cp -r ../init_files/usr ./files
-cp -r ../init_files/boot ./files
 chmod 755 ./files/etc/init.d/thread_border_router
 chmod 755 ./files/usr/local/sbin/thread_border_router
 chmod 755 ./files/usr/local/sbin/create_subnet64.py
