@@ -5,16 +5,30 @@
 #
 CONFIG="/boot/wifi_config.txt"
 BACKUP_CONFIG="/root/.wifi_config.txt"
+HIGH_PIN=20
+TEST_PIN=26
+TIMEOUT=30
+SLEEP=3
+TRIES=$((TIMEOUT / SLEEP))
+
+echo $HIGH_PIN > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio$HIGH_PIN/direction
+echo 1 > /sys/class/gpio/gpio$HIGH_PIN/value
+echo $TEST_PIN > /sys/class/gpio/export
+echo in > /sys/class/gpio/gpio$TEST_PIN/direction
 
 if [ ! -f $CONFIG ]; then
+  logger -t wifi "Configuration file missing, entering AP only mode"
+  cp $BACKUP_CONFIG $CONFIG
+fi
+
+if [ `cat /sys/class/gpio/gpio$TEST_PIN/value` -eq 0 ]; then
+  logger -t wifi "Jumper reset, entering AP only mode"
   cp $BACKUP_CONFIG $CONFIG
 fi
 
 source $CONFIG
 
-TIMEOUT=30
-SLEEP=3
-TRIES=$((TIMEOUT / SLEEP))
 sta_err=0
 echo $erase_wifi_configuration
 if [ $erase_wifi_configuration -eq 1 ]; then
@@ -31,12 +45,11 @@ else
       logger -t wifi "Failed to connect to the stored wifi network, getting back to the fallback AP configuration"
       cp /etc/config/wireless_ap_only /etc/config/wireless
       wifi up
-      #cp /etc/config/wireless_empty /etc/config/wireless
       break
     fi
   done
 fi
-#if [ $sta_err -lt $TRIES ]; then
 if [ $(iwinfo | grep -c "ESSID: unknown") -ne 1 ]; then
   logger -t wifi "WIFI SSID: $(iwinfo | grep ESSID | cut -d \" -f 2)"
 fi
+
