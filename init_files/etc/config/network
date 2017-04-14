@@ -19,16 +19,20 @@ config interface 'wan6'
 	option ip6assign '62'
 	option ifname 'eth0'
 
-config interface 'wpan0'
-	option proto 'static'
-
+#AP config
 config interface 'wifi'
 	option proto 'static'
 	option ipaddr '192.168.2.1'
 	option netmask '255.255.255.0'
 	option mtu '1400'
-	option ifname 'wlan0'
 
+#STA config
 config interface 'wwan'
 	option proto 'dhcp'
+
+config interface 'wwan6'
+	option proto 'dhcpv6'
+	option reqaddress 'try'
+	option ip6assign '62'
+	option reqprefix 'auto'
 

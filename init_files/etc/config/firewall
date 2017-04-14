@@ -19,7 +19,7 @@ config zone
 	option forward 'ACCEPT'
 	option masq '1'
 	option mtu_fix '1'
-	option network 'wan wan6 wwan'
+	option network 'wan wan6 wwan wwan6'
 
 config zone
 	option name 'wifi'
