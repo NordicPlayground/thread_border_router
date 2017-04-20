@@ -58,6 +58,9 @@ become_ap() {
 ###############################################################################
 
 init_gpio() {
+  echo $HIGH_PIN > /sys/class/gpio/unexport
+  echo $TEST_PIN > /sys/class/gpio/unexport
+  sleep 1
   echo $HIGH_PIN > /sys/class/gpio/export
   echo out > /sys/class/gpio/gpio$HIGH_PIN/direction
   echo 1 > /sys/class/gpio/gpio$HIGH_PIN/value
