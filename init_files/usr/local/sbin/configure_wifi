@@ -82,7 +82,7 @@ fi
 ###############################################################################
 
 init_gpio
-if [ `cat /sys/class/gpio/gpio$TEST_PIN/value` -eq 0 ]; then
+if [ `cat /sys/class/gpio/gpio$TEST_PIN/value` -eq 1 ]; then
   logger -t wifi "Jumper reset, entering AP only mode"
   become_ap
 fi
