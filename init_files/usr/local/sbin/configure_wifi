@@ -1,0 +1,128 @@
+#!/bin/sh
+#
+#  Copyright (c) 2017, Nordic Semiconductor
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+# @note This file configures Wi-Fi network on the Thread Border Router.
+#
+
+###############################################################################
+# Configure config file locations, pins used for jumper reset and timeout.
+###############################################################################
+
+USER_CONFIG="/boot/wifi_config.txt"
+BACKUP_USER_CONFIG="/root/.wifi_config.txt"
+INTERFACE_CONFIG="/etc/config/wireless"
+BACKUP_AP_INTERFACE_CONFIG="/etc/config/wireless_ap_only"
+HIGH_PIN=20
+TEST_PIN=26
+TIMEOUT=30
+SLEEP=3
+TRIES=$((TIMEOUT / SLEEP))
+
+###############################################################################
+# Function that resets Wi-Fi to the default Access Point mode.
+###############################################################################
+
+become_ap() {
+  cp $BACKUP_AP_INTERFACE_CONFIG $INTERFACE_CONFIG
+  wifi up
+  sleep 3
+}
+
+###############################################################################
+# Functions that inits GPIO pins used by the jumper reset.
+###############################################################################
+
+init_gpio() {
+  echo $HIGH_PIN > /sys/class/gpio/unexport
+  echo $TEST_PIN > /sys/class/gpio/unexport
+  sleep 1
+  echo $HIGH_PIN > /sys/class/gpio/export
+  echo out > /sys/class/gpio/gpio$HIGH_PIN/direction
+  echo 1 > /sys/class/gpio/gpio$HIGH_PIN/value
+  echo $TEST_PIN > /sys/class/gpio/export
+  echo in > /sys/class/gpio/gpio$TEST_PIN/direction
+}
+
+###############################################################################
+# Create user config if not present.
+###############################################################################
+
+if [ ! -f $USER_CONFIG ]; then
+  logger -t wifi "User configuration file missing, creating default version"
+  cp $BACKUP_USER_CONFIG $USER_CONFIG
+fi
+
+###############################################################################
+# Switch to Access Point mode if jumper in reset position.
+###############################################################################
+
+init_gpio
+if [ `cat /sys/class/gpio/gpio$TEST_PIN/value` -eq 1 ]; then
+  logger -t wifi "Jumper reset, entering AP only mode"
+  become_ap
+fi
+
+###############################################################################
+# Read user configuration file.
+###############################################################################
+
+source $USER_CONFIG
+
+###############################################################################
+# Switch to Access Point mode if erase_wifi_configuration=1
+# or attempt to conenct to the previous Wi-Fi network.
+# If connecting to the previous network fails Access Point mode is enabled.
+###############################################################################
+
+sta_err=0
+echo $erase_wifi_configuration
+if [ $erase_wifi_configuration -eq 1 ]; then
+  logger -t wifi "Erasing wifi configuration, entering AP only mode"
+  become_ap
+else
+  sleep 5
+  while [ $(iwinfo | grep -c "ESSID: unknown") -ge 1 ]; do
+    logger -t wifi "Connecting to the stored wifi network $sta_err/$TRIES"
+    let sta_err=$sta_err+1
+    sleep $SLEEP
+    if [ $((sta_err * SLEEP)) -ge $TIMEOUT ]; then
+      logger -t wifi "Failed to connect to the stored wifi network, getting back to the fallback AP configuration"
+      become_ap
+      break
+    fi
+  done
+fi
+
+###############################################################################
+# Print SSID of the active network to the system log.
+###############################################################################
+
+if [ $(iwinfo | grep -c "ESSID: unknown") -ne 1 ]; then
+  logger -t wifi "SSID: $(iwinfo | grep ESSID | cut -d \" -f 2)"
+fi
+

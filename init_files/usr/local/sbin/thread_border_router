@@ -96,7 +96,7 @@ init_dns64() {
 ###############################################################################
 
 assign_global_ipv6_addrs() {
-	list_wan_addresses=`ip addr show dev eth0 | sed -e"s/^.*inet6 \([^ ]*\).*$/\1/;t;d"`
+	list_wan_addresses=`ip -6 route | sed -e "s/^.*from \([^ ]*\).*$/\1/;t;d" | grep ^2`
 	for addr in $list_wan_addresses
 	do
 		prefix_len=`echo $addr | cut -d"/" -f2`

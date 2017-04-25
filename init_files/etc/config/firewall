@@ -6,25 +6,27 @@ config defaults
 	option forward 'ACCEPT'
 
 config zone
-	option name 'lan'
-	list network 'lan'
+	option name 'wifi'
 	option input 'ACCEPT'
 	option output 'ACCEPT'
 	option forward 'ACCEPT'
+	option network 'wifi'
 
 config zone
 	option name 'wan'
-	list network 'wan'
-	list network 'wan6'
-	option input 'REJECT'
+	option input 'ACCEPT'
 	option output 'ACCEPT'
-	option forward 'REJECT'
+	option forward 'ACCEPT'
 	option masq '1'
 	option mtu_fix '1'
+	option network 'wan wan6 wwan wwan6'
 
-config forwarding
-	option src 'lan'
-	option dest 'wan'
+config zone
+	option name 'wifi'
+	option input 'ACCEPT'
+	option output 'ACCEPT'
+	option forward 'ACCEPT'
+	option network 'wifi'
 
 config rule
 	option name 'Allow-DHCP-Renew'
@@ -121,5 +123,4 @@ config rule
 	option dest_port '500'
 	option proto 'udp'
 	option target 'ACCEPT'
-
 
