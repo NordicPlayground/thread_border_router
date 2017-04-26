@@ -49,8 +49,17 @@ TRIES=$((TIMEOUT / SLEEP))
 
 become_ap() {
   cp $BACKUP_AP_INTERFACE_CONFIG $INTERFACE_CONFIG
-  wifi up
+  uci set wireless.@wifi-iface[0]="`uci get wireless_ap_only.@wifi-iface[0]`"
+  uci set wireless.@wifi-iface[0].encryption="`uci get wireless_ap_only.@wifi-iface[0].encryption`"
+  uci set wireless.@wifi-iface[0].device="`uci get wireless_ap_only.@wifi-iface[0].device`"
+  uci set wireless.@wifi-iface[0].ssid="`uci get wireless_ap_only.@wifi-iface[0].ssid`"
+  uci set wireless.@wifi-iface[0].mode="`uci get wireless_ap_only.@wifi-iface[0].mode`"
+  uci set wireless.@wifi-iface[0].network="`uci get wireless_ap_only.@wifi-iface[0].network`"
+  uci set wireless.@wifi-iface[0].key="`uci get wireless_ap_only.@wifi-iface[0].key`"
+  uci commit wireless
   sleep 3
+  wifi
+  sleep 5
 }
 
 ###############################################################################
@@ -110,6 +119,7 @@ else
     logger -t wifi "Connecting to the stored wifi network $sta_err/$TRIES"
     let sta_err=$sta_err+1
     sleep $SLEEP
+    wifi
     if [ $((sta_err * SLEEP)) -ge $TIMEOUT ]; then
       logger -t wifi "Failed to connect to the stored wifi network, getting back to the fallback AP configuration"
       become_ap
