@@ -108,7 +108,7 @@ source $USER_CONFIG
 # If connecting to the previous network fails Access Point mode is enabled.
 ###############################################################################
 
-sta_err=0
+sta_err=1
 echo $erase_wifi_configuration
 if [ $erase_wifi_configuration -eq 1 ]; then
   logger -t wifi "Erasing wifi configuration, entering AP only mode"
@@ -120,7 +120,7 @@ else
     let sta_err=$sta_err+1
     sleep $SLEEP
     wifi
-    if [ $((sta_err * SLEEP)) -ge $TIMEOUT ]; then
+    if [ $(((sta_err - 1) * SLEEP)) -ge $TIMEOUT ]; then
       logger -t wifi "Failed to connect to the stored wifi network, getting back to the fallback AP configuration"
       become_ap
       break
@@ -135,4 +135,5 @@ fi
 if [ $(iwinfo | grep -c "ESSID: unknown") -ne 1 ]; then
   logger -t wifi "SSID: $(iwinfo | grep ESSID | cut -d \" -f 2)"
 fi
+
 
