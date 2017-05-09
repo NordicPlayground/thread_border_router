@@ -1,55 +1,55 @@
 # thread_border_router build system
 ## Prerequisites:
-1. Linux based host, Debian Linux has been tested.
-2. At least 25GiB of free hard drive space.
+1. Linux-based host, Debian Linux has been tested.
+2. At least 25 GiB of free hard drive space.
 3. Internet connection to access remote repositories.
 
-The following packages need to be installed on a host linux operating system to build the OpenWrt based image:
-build-essential 
-subversion 
-libncurses5-dev 
-libssl-dev 
-zlib1g-dev 
-gawk 
-gcc-multilib 
-flex 
-git-core 
-gettext 
-gcc 
-binutils 
-bzip2 
-python 
-perl 
-make 
-unzip 
-libz-dev 
-tftp 
-git 
-shtool 
-autogen 
-automake 
-libtool 
+The following packages need to be installed on a host Linux operating system to build the OpenWrt-based image:
+build-essential
+subversion
+libncurses5-dev
+libssl-dev
+zlib1g-dev
+gawk
+gcc-multilib
+flex
+git-core
+gettext
+gcc
+binutils
+bzip2
+python
+perl
+make
+unzip
+libz-dev
+tftp
+git
+shtool
+autogen
+automake
+libtool
 autotools-dev
 
-For a debian based host it is sufficient to run the following command:
+For a Debian-based host, it is sufficient to run the following command:
 su -c 'apt-get -y install build-essential subversion libncurses5-dev libssl-dev zlib1g-dev gawk gcc-multilib flex git-core gettext gcc binutils bzip2 python perl make unzip libz-dev tftp git shtool autogen automake libtool autotools-dev'
 
 
-## Building image:
-1. Execute ./init_build script.
-2. Execute build script. You can choose between ./build.sh uses 4 jobs and ./build_slow that builds one thing at the time.
+## Building the image:
+1. Execute the ./init_build script.
+2. Execute the build script. You can choose between ./build.sh, which runs 4 jobs consecutively, or ./build_slow, which builds one thing at a time.
 
-Please note that build can take up to few hours depending on your computer and network connection performance.
-After that the image file openwrt-brcm2708-bcm2710-rpi-3-ext4-sdcard.img will be copied to the current directory.
+Note that the build can take up to a few hours, depending on your computer and network connection performance.
+When the build is finished, the image file openwrt-brcm2708-bcm2710-rpi-3-ext4-sdcard.img will be copied to the current directory.
 
 Image file RaspPi_Thread_Border_Router_Demo.img will be created in the current directory.
 
 ## Flashing image to the card:
-Later it can be flashed to the sdcard with the disk dump utility:
+You flash the image to an SD card using the disk dump utility:
 
 dd if=RaspPi_Thread_Border_Router_Demo.img of=/dev/sdX bs=2M conv=fsync
 
-Where sdx is the sdcard device name, which can be seen in dmesg after inserting a card into the card reader.
+Where sdx is the SD card device name, which can be seen in dmesg after inserting a card into the card reader.
 On Windows Win32DiskImager can be used.
 
 ## Troubleshooting:
@@ -85,8 +85,7 @@ or run serial build manually:
 cd ./openwrt
 make -j1 V=s
 
-Also rebuilding a single package is possible:
+You can also rebuild a single package.
 make package/PACKAGE_NAME/{clean,compile} -j1 V=s
 
 e.g. make package/gettext-full/{clean,compile} -j1 V=s
-
