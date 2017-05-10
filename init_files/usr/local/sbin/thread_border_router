@@ -36,6 +36,18 @@
 source /etc/config/thread_border_router
 
 ###############################################################################
+# Init Border Router UART NCP transport.
+###############################################################################
+
+init_uart_ncp_transport() {
+	stty -F /dev/ttyACM0 115200 cread crtscts
+
+	# Temporary workaround for the Segger JLink driver issue
+	echo 0 > /sys/devices/platform/soc/3f980000.usb/buspower
+	echo 1 > /sys/devices/platform/soc/3f980000.usb/buspower
+}
+
+###############################################################################
 # Remove old instance of Tayga NAT64.
 ###############################################################################
 
@@ -143,9 +155,6 @@ prepare_network() {
 ###############################################################################
 
 run() {
-	stty -F /dev/ttyACM0 $ncp_baudrate
-	sleep 1
-
 	killall wpantund 2>/dev/null
 	nfccommissiond stop
 	sleep 2
@@ -161,9 +170,9 @@ run() {
 	wpanctl setprop Network:PANID $thread_panid
 	wpanctl attach
 	sleep 5
-	
+
 	timeout=10
-	
+
 	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` != "associated" ] && [ $? -eq 0 ] && [ $timeout -gt 0 ]
 	do
 		timeout=$((timeout-1))
@@ -175,6 +184,7 @@ run() {
 # Main  script
 ###############################################################################
 
+init_uart_ncp_transport
 init_nat64
 init_dns64
 prepare_network
@@ -189,7 +199,7 @@ do
 		assign_nat64_addrs
 		sleep 2
 		assign_global_ipv6_addrs
-    
+
 	if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
 	then
 		echo "commissioner_started"
@@ -202,3 +212,4 @@ do
 	sleep 15
 	done
 done
+
