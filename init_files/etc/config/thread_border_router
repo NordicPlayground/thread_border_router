@@ -42,3 +42,6 @@ prefix_ula="fdff:cafe:cafe:cafe::"
 
 # Commissioner Configuration
 nfc_commissioner_enable=true
+
+# MQTTSN-Gateway Configuration
+paho_mqtt_sn_gateway_enable=true
