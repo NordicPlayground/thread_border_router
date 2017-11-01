@@ -5,4 +5,4 @@ imposed by license inherited from NXP’s EXPLORE_NFC_WW
 a user uses a Border Router feature to natively commission nodes using NFC.
 
 For corresponding source code and build system please refer to:
-https://github.com/NordicSemiconductor/thread_border_router/blob/master/README.md
+https://github.com/NordicPlayground/thread_border_router/blob/master/README.md
