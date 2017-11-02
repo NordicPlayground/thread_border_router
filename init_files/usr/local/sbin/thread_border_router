@@ -150,14 +150,6 @@ prepare_network() {
 	sleep 3
 }
 
-paho_mqtt_sn_gateway_enable() {
-	if [ "$paho_mqtt_sn_gateway_enable" = true ]
-	then
-		echo "paho_mqtt_gateway_started"
-		MQTT-SNGateway &
-	fi
-}
-
 ###############################################################################
 # Run Border Router Service.
 ###############################################################################
@@ -196,11 +188,11 @@ init_uart_ncp_transport
 init_nat64
 init_dns64
 prepare_network
-paho_mqtt_sn_gateway_enable
 
 while true
 do
 	commissioner_started=0
+	paho_mqtt_gateway_started=0
 	run
 
 	while [ `wpanctl getprop NCP:State | cut -d "\"" -f2` = "associated" ] && [ $? -eq 0 ]
@@ -209,16 +201,23 @@ do
 		sleep 2
 		assign_global_ipv6_addrs
 
-	if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
-	then
-		echo "commissioner_started"
-		sleep 3
-		wpanctl commissioner --start
-		sleep 1
-		nfccommissiond
-		commissioner_started=1
-	fi
-	sleep 15
+		if [ "$nfc_commissioner_enable" = true ] && [ $commissioner_started -eq 0 ]
+		then
+			echo "commissioner_started"
+			sleep 3
+			wpanctl commissioner --start
+			sleep 1
+			nfccommissiond
+			commissioner_started=1
+		fi
+		sleep 15
+		if [ "$paho_mqtt_sn_gateway_enable" = true ] && [ $paho_mqtt_gateway_started -eq 0 ]
+		then
+			echo "paho_mqtt_gateway_started"
+			MQTT-SNGateway&
+			paho_mqtt_gateway_started=1
+		fi
 	done
 done
+
 
