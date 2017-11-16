@@ -162,9 +162,6 @@ run() {
 	wpantund -b $ncp_baudrate -d&
 	sleep 2
 
-	wpanctl reset
-	sleep 3
-
 	wpanctl set Network:Key --data $thread_network_key
 	wpanctl set NCP:Channel $thread_channel
 	wpanctl setprop Network:PANID $thread_panid
