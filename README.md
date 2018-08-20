@@ -1,4 +1,8 @@
 # thread_border_router build system
+This is a deprecated project that has has been used in nRF5 SDK for Thread versions prior to 1.0.0.
+Starting from nRF5 SDK for Thread and Zigbee 1.0.0 onwards it has been replaced with the new version based on the [OpenThread Border Router Project](https://github.com/openthread/borderrouter).
+
+For more information please refer to [nRF5 SDK for Thread and Zigbee](https://www.nordicsemi.com/eng/Products/nRF5-SDK-for-Thread).
 ## Prerequisites:
 1. Linux-based host, Debian Linux has been tested.
 2. At least 25 GiB of free hard drive space.
